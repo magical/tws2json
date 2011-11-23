@@ -1,0 +1,32 @@
+class: "tws"
+ruleset: "ms" or "lynx"
+levelset: name of levelset
+solutions: [solution]
+
+class: "solution"
+number: level number
+password: string, level password
+rndslidedir: north/south/east/west
+rndseed: number
+stepping: number
+solution_time: in ticks
+moves: movestring
+
+movestring:
+L left
+R right
+U up
+D down
+. wait one move
+, wait one tick
+
+Directions must be uppercase.
+A direction followed by a lowercase direction is a diagonal move.
+For example, Ul is an UP move with a diagonal direction of LEFT.
+
+Any of the above can be preceded by a number, which means that the move is repeated that many times.
+For example, 5L is the same as LLLLL.
+
+Spaces are ignored. Any other character is an error.
+
+LRUD and . are implicitly separated from each other by 4 ticks. The comma is separated from any others by 1 tick. In other words, the solution LLLD is the same as L3,L3,L3,D

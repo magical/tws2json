@@ -1,0 +1,4 @@
+*.o
+/.redo/
+/*.tws
+/tws2json
