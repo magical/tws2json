@@ -13,6 +13,8 @@
 #include "fileio.h"
 #include "err.h"
 
+#include "version.h"
+
 const char *ruleset_names[] = {
     "",
     "lynx", /* Ruleset_Lynx */
@@ -410,6 +412,7 @@ int main(int argc, char *argv[])
 	printf("{\"class\":\"tws\",\n"
 	       " \"ruleset\":\"%s\",\n"
 	       " \"levelset\":\"%.*s\",\n"
+	       " \"generator\":\"tws2json/" VERSION "\",\n"
 	       " \"solutions\":[\n",
 	       ruleset_names[ruleset],
 	       extrasize, extra);

@@ -24,6 +24,7 @@ You should see something like this:
     {"class":"tws",
      "ruleset":"ms",
      "levelset":"",
+     "generator":"tws2json/0.1",
      "solutions":[
       {"class":"solution",
        "number":1,

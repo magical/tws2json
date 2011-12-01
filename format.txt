@@ -1,6 +1,7 @@
 class: "tws"
 ruleset: "ms" or "lynx"
 levelset: name of levelset
+generator: the program which made this file
 solutions: [solution]
 
 class: "solution"
