@@ -94,6 +94,35 @@ int printnum(jsoncompressinfo *self, int num)
     return 0;
 }
 
+int printwait(jsoncompressinfo *self, int count)
+{
+    int r;
+
+    if (count == 0) {
+    } else if (count == 1) {
+	if (BSTR_OK != bconchar(self->str, ',')) {
+	    return -1;
+	}
+    } else if (count == 2) {
+	if (BSTR_OK != bcatcstr(self->str, ",,")) {
+	    return -1;
+	}
+    } else if (count == 4) {
+	if (BSTR_OK != bconchar(self->str, '.')) {
+	    return -1;
+	}
+    } else {
+	r = printnum(self, count);
+	if (r < 0) {
+	    return r;
+	}
+	if (BSTR_OK != bconchar(self->str, ',')) {
+	    return -1;
+	}
+    }
+    return 0;
+}
+
 /**
  * Initialize a jsoncompressinfo struct.
  */
@@ -272,12 +301,9 @@ int jsoncompress_addmove(jsoncompressinfo *self, action move, int i)
 	if (r < 0) {
 	    goto end;
 	}
-	r = printnum(self, delta - 1);
+	r = printwait(self, delta - 1);
 	if (r < 0) {
 	    goto end;
-	}
-	if (BSTR_OK != bconchar(self->str, ',')) {
-	    r = -1;
 	}
     }
 
@@ -314,9 +340,9 @@ int jsoncompress_finish(jsoncompressinfo *self, unsigned long solutiontime)
     }
 
     if (self->lastmove.when < solutiontime) {
-	if (BSTR_OK != bformata(self->str, "%d,",
-	                        solutiontime - self->lastmove.when - 1)) {
-	    return -1;
+	r = printwait(self, solutiontime - self->lastmove.when - 1);
+	if (r < 0) {
+	    return r;
 	}
     }
     return 0;
