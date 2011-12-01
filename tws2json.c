@@ -6,6 +6,9 @@
 
 #include <stdio.h>
 #include <stddef.h>
+
+#include "bstrlib.h"
+
 #include "solution.h"
 #include "fileio.h"
 #include "err.h"
@@ -17,9 +20,7 @@ const char *ruleset_names[] = {
 };
 
 typedef struct jsoncompressinfo {
-    char   *buf;
-    size_t	bufpos;
-    size_t	bufsize;
+    bstring	str;
 
     action	lastmove;
 
@@ -32,6 +33,7 @@ typedef struct jsoncompressinfo {
 } jsoncompressinfo;
 
 int jsoncompress_init(jsoncompressinfo *self);
+void jsoncompress_free(jsoncompressinfo *self);
 int jsoncompress_flush(jsoncompressinfo *self);
 int jsoncompress_finish(jsoncompressinfo *self, int solutiontime);
 int jsoncompress_addmove(jsoncompressinfo *self, action move, int i);
@@ -46,46 +48,49 @@ int jsoncompress_rle_flush(jsoncompressinfo *self);
  */
 int printdir(jsoncompressinfo *self, int dir, int duration)
 {
-    char *buf = self->buf + self->bufpos;
+    int r = BSTR_OK;
 
     if (duration == 1) {
 	switch (dir) {
-	case NORTH: *buf++ = 'u'; break;
-	case WEST:  *buf++ = 'l'; break;
-	case SOUTH: *buf++ = 'd'; break;
-	case EAST:  *buf++ = 'r'; break;
-	case NORTH|WEST: *buf++ = 'u'; *buf++ = '+'; *buf++ = 'l'; break;
-	case NORTH|EAST: *buf++ = 'u'; *buf++ = '+'; *buf++ = 'r'; break;
-	case SOUTH|WEST: *buf++ = 'd'; *buf++ = '+'; *buf++ = 'l'; break;
-	case SOUTH|EAST: *buf++ = 'd'; *buf++ = '+'; *buf++ = 'r'; break;
+	case NORTH: r = bconchar(self->str, 'u'); break;
+	case WEST:  r = bconchar(self->str, 'l'); break;
+	case SOUTH: r = bconchar(self->str, 'd'); break;
+	case EAST:  r = bconchar(self->str, 'r'); break;
+	case NORTH|WEST: r = bcatcstr(self->str, "u+l"); break;
+	case NORTH|EAST: r = bcatcstr(self->str, "u+r"); break;
+	case SOUTH|WEST: r = bcatcstr(self->str, "d+l"); break;
+	case SOUTH|EAST: r = bcatcstr(self->str, "d+r"); break;
 	default: goto unknown;
 	}
     } else if (duration == 4) {
 	switch (dir) {
-	case NORTH: *buf++ = 'U'; break;
-	case WEST:  *buf++ = 'L'; break;
-	case SOUTH: *buf++ = 'D'; break;
-	case EAST:  *buf++ = 'R'; break;
-	case NORTH|WEST: *buf++ = 'U'; *buf++ = '+'; *buf++ = 'L'; break;
-	case NORTH|EAST: *buf++ = 'U'; *buf++ = '+'; *buf++ = 'R'; break;
-	case SOUTH|WEST: *buf++ = 'D'; *buf++ = '+'; *buf++ = 'L'; break;
-	case SOUTH|EAST: *buf++ = 'D'; *buf++ = '+'; *buf++ = 'R'; break;
+	case NORTH: r = bconchar(self->str, 'U'); break;
+	case WEST:  r = bconchar(self->str, 'L'); break;
+	case SOUTH: r = bconchar(self->str, 'D'); break;
+	case EAST:  r = bconchar(self->str, 'R'); break;
+	case NORTH|WEST: r = bcatcstr(self->str, "U+L"); break;
+	case NORTH|EAST: r = bcatcstr(self->str, "U+R"); break;
+	case SOUTH|WEST: r = bcatcstr(self->str, "D+L"); break;
+	case SOUTH|EAST: r = bcatcstr(self->str, "D+R"); break;
 	default: goto unknown;
 	}
     }
-    
-    self->bufpos = buf - self->buf;
+    if (r != BSTR_OK) {
+	return -1;
+    }
+
     return 0;
 
 unknown:
     errmsg("error", "Unknown direction (%d)", dir);
-    self->bufpos = buf - self->buf;
     return -1;
 }
 
 int printnum(jsoncompressinfo *self, int num)
 {
-    self->bufpos += sprintf(self->buf + self->bufpos, "%d", num);
+    if (BSTR_OK != bformata(self->str, "%d", num)) {
+	return -1;
+    }
     return 0;
 }
 
@@ -97,10 +102,6 @@ int jsoncompress_init(jsoncompressinfo *self)
     if (self == NULL) {
 	return -1;
     }
-    self->buf = NULL;
-    self->bufpos = 0;
-    self->bufsize = 0;
-
     self->lastmove.dir = NIL;
 
     self->lastmovedir = NIL;
@@ -110,7 +111,20 @@ int jsoncompress_init(jsoncompressinfo *self)
     self->rlemoveduration = 0;
     self->rlecount = 0;
 
+    self->str = bfromcstr("");
+    if (self->str == NULL) {
+	return -1;
+    }
+
     return 0;
+}
+
+void jsoncompress_free(jsoncompressinfo *self)
+{
+    if (self == NULL) {
+	return;
+    }
+    bdestroy(self->str);
 }
 
 // Flush means: get rid of any buffered state; flush all moves to the char buffer; we've got something new coming in the pipeline.
@@ -251,7 +265,12 @@ int jsoncompress_addmove(jsoncompressinfo *self, action move, int i)
 	    goto end;
 	}
 	r = printnum(self, delta - 1);
-	self->buf[self->bufpos++] = ',';
+	if (r < 0) {
+	    goto end;
+	}
+	if (BSTR_OK != bconchar(self->str, ',')) {
+	    r = -1;
+	}
     }
 
 end:
@@ -287,10 +306,11 @@ int jsoncompress_finish(jsoncompressinfo *self, int solutiontime)
     }
 
     if (self->lastmove.when < solutiontime) {
-	self->bufpos += sprintf(self->buf + self->bufpos, "%d,", 
-	                        solutiontime - self->lastmove.when - 1);
+	if (BSTR_OK != bformata(self->str, "%d,",
+	                        solutiontime - self->lastmove.when - 1)) {
+	    return -1;
+	}
     }
-    self->buf[self->bufpos++] = '\0';
     return 0;
 }
 
@@ -299,7 +319,7 @@ int jsoncompress_finish(jsoncompressinfo *self, int solutiontime)
  *
  * @returns 0 on success. 1 on failure.
  */
-int compressjsonsolution(actlist *moves, int solutiontime, char *buf)
+int compressjsonsolution(actlist *moves, int solutiontime, bstring movestr)
 {
     jsoncompressinfo jsoncompress;
     int i, r;
@@ -308,7 +328,6 @@ int compressjsonsolution(actlist *moves, int solutiontime, char *buf)
     if (r < 0) {
 	return r;
     }
-    jsoncompress.buf = buf;
 
     for (i = 0; i < moves->count; i++) {
 	r = jsoncompress_addmove(&jsoncompress, moves->list[i], i);
@@ -321,7 +340,9 @@ int compressjsonsolution(actlist *moves, int solutiontime, char *buf)
 	return r;
     }
 
-    //*buf = jsoncompress->buf;
+    bassign(movestr, jsoncompress.str);
+    jsoncompress_free(&jsoncompress);
+
     return 0;
 }
 
@@ -335,7 +356,7 @@ int main(int argc, char *argv[])
 	fileinfo file;
 
 	unsigned char extra[256];
-	char movebuf[8192]; // XXX
+	bstring movestr = bfromcstr("");
 
 	if (argc < 2) {
 		return 1;
@@ -371,7 +392,7 @@ int main(int argc, char *argv[])
 			       solution.number,
 			       solution.passwd);
 		} else {
-			if (compressjsonsolution(&solution.moves, solution.besttime, movebuf)) {
+			if (compressjsonsolution(&solution.moves, solution.besttime, movestr)) {
 				continue;
 			}
 			printf("  {\"class\":\"solution\",\n"
@@ -386,12 +407,14 @@ int main(int argc, char *argv[])
 			       solution.rndslidedir,
 			       solution.stepping,
 			       solution.rndseed,
-			       movebuf);
+			       bdata(movestr));
 		}
 		printf(",\n");
 		fflush(stdout);
 	}
 	printf("]}\n");
+
+	bdestroy(movestr);
 
 	return 0;
 }

@@ -56,6 +56,10 @@ The levelset name isn't loaded properly.
 
 ### License ###
 
-GPL. See [COPYING](COPYING) for the full license text.
+GPLv2. See [COPYING](COPYING) for the full license text.
 
 Several files have been borrowed from [Tile World][], copyright Brian Raiter, which is also licensed under the GPL.
+
+[bstrlib][] was written by Paul Hsieh, and is licensed under the GPL.
+
+[bstrlib]: http://bstring.sourceforge.net/
