@@ -31,7 +31,7 @@ You should see something like this:
        "rndslidedir":1,
        "stepping":0,
        "rndseed":2017730254,
-       "moves":"LLLLLRRR7,R3,RRRRR3,RLLL3,LLDDDDDLLLLLDDDUUURRRRRDDRRRRRUUUDDDLLLLL5,DD3,R5,R3,R5,L3,LLLLLRRRDDDDDD6,D"},
+       "moves":"5L3R3,r2,4Rr2,R2Ll2,2L5D5L3D3U5R2D5R3U3D5L1,Dd2,R1,r2,R1,l2,5L3R6D2,d"},
       {"class":"solution",
        "number":2,
     ...
