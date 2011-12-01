@@ -104,7 +104,7 @@ void fileclose(fileinfo *file, char const *msg)
 {
     errno = 0;
     if (file->fp) {
-	if (!fclose(file->fp))
+	if (fclose(file->fp))
 	    fileerr(file, msg);
 	file->fp = NULL;
     }

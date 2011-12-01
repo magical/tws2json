@@ -35,7 +35,7 @@ typedef struct jsoncompressinfo {
 int jsoncompress_init(jsoncompressinfo *self);
 void jsoncompress_free(jsoncompressinfo *self);
 int jsoncompress_flush(jsoncompressinfo *self);
-int jsoncompress_finish(jsoncompressinfo *self, int solutiontime);
+int jsoncompress_finish(jsoncompressinfo *self, unsigned long solutiontime);
 int jsoncompress_addmove(jsoncompressinfo *self, action move, int i);
 int jsoncompress_rle_add(jsoncompressinfo *self, int dir, int duration);
 int jsoncompress_rle_flush(jsoncompressinfo *self);
@@ -132,11 +132,19 @@ int jsoncompress_flush(jsoncompressinfo *self)
 {
     int r = 0;
 
-    jsoncompress_rle_flush(self);
+    r = jsoncompress_rle_flush(self);
+    if (r < 0) {
+	goto cleanup;
+    }
 
     if (self->lastmovedir != NIL) {
 	r = printdir(self, self->lastmovedir, self->lastmoveduration);
+	if (r < 0) {
+	    goto cleanup;
+	}
     }
+
+cleanup:
     self->lastmovedir = NIL;
     self->lastmoveduration = 0;
 
@@ -178,7 +186,7 @@ int jsoncompress_rle_add(jsoncompressinfo *self, int dir, int duration)
     self->rlemovedir = dir;
     self->rlemoveduration = duration;
     self->rlecount = 1;
-    if (r) {
+    if (r < 0) {
 	return r;
     }
 
@@ -229,7 +237,7 @@ int jsoncompress_rle_flush(jsoncompressinfo *self)
 int jsoncompress_addmove(jsoncompressinfo *self, action move, int i)
 {
     int r;
-    int delta = 1;
+    long delta = 1;
 
     if (self == NULL) {
 	return -1;
@@ -290,7 +298,7 @@ end:
  *
  * You must supply the total solution time, so appropriate waiting can be added.
  */
-int jsoncompress_finish(jsoncompressinfo *self, int solutiontime)
+int jsoncompress_finish(jsoncompressinfo *self, unsigned long solutiontime)
 {
     int r;
 
@@ -319,7 +327,7 @@ int jsoncompress_finish(jsoncompressinfo *self, int solutiontime)
  *
  * @returns 0 on success. 1 on failure.
  */
-int compressjsonsolution(actlist *moves, int solutiontime, bstring movestr)
+int compressjsonsolution(actlist *moves, unsigned long solutiontime, bstring movestr)
 {
     jsoncompressinfo jsoncompress;
     int i, r;
@@ -352,11 +360,13 @@ int main(int argc, char *argv[])
 	int ruleset;
 	int flags;
 	int extrasize;
-	solutioninfo solution;
+	solutioninfo solution = {};
 	fileinfo file;
 
 	unsigned char extra[256];
 	bstring movestr = bfromcstr("");
+
+	clearfileinfo(&file);
 
 	if (argc < 2) {
 		return 1;
@@ -377,8 +387,6 @@ int main(int argc, char *argv[])
 	       ruleset_names[ruleset],
 	       extrasize, extra);
 
-	solution.moves.allocated = 0;
-	solution.moves.list = NULL;
 	while (readsolution(&file, &solution)) {
 		if (!solution.number) {
 			continue;
@@ -387,7 +395,7 @@ int main(int argc, char *argv[])
 		if (!solution.moves.count) {
 			//just the number and password
 			printf("  {\"class\":\"solution\",\n"
-			       "   \"number\":%d,\n"
+			       "   \"number\":%u,\n"
 			       "   \"password\":\"%.4s\"}",
 			       solution.number,
 			       solution.passwd);
@@ -396,7 +404,7 @@ int main(int argc, char *argv[])
 				continue;
 			}
 			printf("  {\"class\":\"solution\",\n"
-			       "   \"number\":%d,\n"
+			       "   \"number\":%u,\n"
 			       "   \"password\":\"%s\",\n"
 			       "   \"rndslidedir\":%d,\n"
 			       "   \"stepping\":%d,\n"
@@ -404,10 +412,10 @@ int main(int argc, char *argv[])
 			       "   \"moves\":\"%s\"}",
 			       solution.number,
 			       solution.passwd,
-			       solution.rndslidedir,
-			       solution.stepping,
+			       (int)solution.rndslidedir,
+			       (int)solution.stepping,
 			       solution.rndseed,
-			       bdata(movestr));
+			       bdatae(movestr, "<out of memory>"));
 		}
 		printf(",\n");
 		fflush(stdout);
@@ -415,6 +423,7 @@ int main(int argc, char *argv[])
 	printf("]}\n");
 
 	bdestroy(movestr);
+	fileclose(&file, "error");
 
 	return 0;
 }
