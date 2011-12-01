@@ -29,4 +29,30 @@ For example, 5L is the same as LLLLL.
 
 Spaces are ignored. Any other character is an error.
 
-LRUD and . are implicitly separated from each other by 4 ticks. The comma is separated from any others by 1 tick. In other words, the solution LLLD is the same as L3,L3,L3,D
+LRUD and . are implicitly separated from each other by 4 ticks. The comma is separated from any others by 1 tick. In other words, the solution LLLD is the same as L3,L3,L3,D .
+
+A Discussion
+------------
+
+Okay, wait. That's not quite what's implemented.
+
+We have, really, two separate problems here: MS mode and Lynx mode. In Lynx mode, one tends to hold down the keys, so we have, say, a stream of L for 12 frames followed by a U for 15 frames, followed by nothing for 3 frames, and so on. In MS mode, one usually hits the keys repeatedly. So you (ideally) have keypresses separated by 4 frames.
+
+Tile World complicates this by discarding keystrokes which happen when Chip is not allowed to move (such as when another move was executed less than 4 frames ago, or when being forced by ice or force floor tiles).
+
+The notation used by chipsters isn't much concerned with timing information; more with encoding the optimal path through a level. It is assumed that moves will be executed as quickly as possible. If pauses are necessary they are given explicitly.
+ 
+Personally i think Tile World is wrong: that the solution should encode the entire, unabridged input stream.
+
+New format
+----------
+
+LRUD   Move followed by 3, (a 4-frame move)
+lrud   Move followed by nothing (a 1-frame move)
+.      4-tick rest
+,      1-tick rest
+
+X+X    Diagonal move
+*X     Mouse click (one direction)
+*X;X   Mouse click (two directions)
+*.     Mouse click (on Chip)

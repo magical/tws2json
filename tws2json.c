@@ -17,51 +17,65 @@ const char *ruleset_names[] = {
 };
 
 /**
+ * Print the given direction to a buffer.
+ *
+ * @returns 0 on success. 1 on failure.
+ */
+int printdir1(char **buf, int dir, int i)
+{
+	switch (dir) {
+	case NORTH: *(*buf)++ = 'u'; break;
+	case WEST:  *(*buf)++ = 'l'; break;
+	case SOUTH: *(*buf)++ = 'd'; break;
+	case EAST:  *(*buf)++ = 'r'; break;
+	case NORTH|WEST: *(*buf)++ = 'u'; *(*buf)++ = '+'; *(*buf)++ = 'l'; break;
+	case NORTH|EAST: *(*buf)++ = 'u'; *(*buf)++ = '+'; *(*buf)++ = 'r'; break;
+	case SOUTH|WEST: *(*buf)++ = 'd'; *(*buf)++ = '+'; *(*buf)++ = 'l'; break;
+	case SOUTH|EAST: *(*buf)++ = 'd'; *(*buf)++ = '+'; *(*buf)++ = 'r'; break;
+	default:
+		errmsg("error", "Can't encode move %d (%d)", i, dir);
+		return 1;
+	}
+	return 0;
+}
+
+/**
  * Convert a list of moves to a textual representation.
  *
  * @returns 0 on success. 1 on failure.
  */
-int compressjsonsolution(actlist *moves, char *buf) {
-	action const  *move;
+int compressjsonsolution(actlist *moves, int solutiontime, char *buf) {
+	action const   *move;
 	int i, when, delta;
+	int lastdir = NIL;
 
 	when = 0;
 	for (i = 0; i < moves->count; i++) {
 		move = &moves->list[i];
 
-		delta = move->when - when;
+		if (i == 0) {
+			delta = 1;
+		} else {
+			// ticks between the previous move and the current move.
+			delta = move->when - when;
+		}
 
-		if (when) {
-			if (delta <= 0) {
-				errmsg("error", "bad delta %d, move %d", delta, i);
-				return 1;
-			} else if (delta == 1) {
-				*buf++ = ',';
-			} else if (delta == 4) {
-			} else if (delta == 8) {
-				*buf++ = '.';
-			} else if (delta % 4 == 0) {
-				buf += sprintf(buf, "%d.", delta / 4);
-			} else {
-				buf += sprintf(buf, "%d,", delta);
-			}
+		if (delta <= 0) {
+			errmsg("error", "bad delta %d, move %d", delta, i);
+			return 1;
+		} else if (1 < delta) {
+			buf += sprintf(buf, "%d,", delta - 1);
+		}
+
+		if (printdir1(&buf, move->dir, i)) {
+			return 1;
 		}
 
 		when = move->when;
-
-		switch (move->dir) {
-		case NORTH: *buf++ = 'U'; break;
-		case WEST:  *buf++ = 'L'; break;
-		case SOUTH: *buf++ = 'D'; break;
-		case EAST:  *buf++ = 'R'; break;
-		case NORTH|WEST: *buf++ = 'U'; *buf++ = 'l'; break;
-		case NORTH|EAST: *buf++ = 'U'; *buf++ = 'r'; break;
-		case SOUTH|WEST: *buf++ = 'D'; *buf++ = 'l'; break;
-		case SOUTH|EAST: *buf++ = 'D'; *buf++ = 'r'; break;
-		default:
-			errmsg("error", "Can't encode move %d (%d)", i, move->dir);
-			return 1;
-		}
+		lastdir = move->dir;
+	}
+	if (when < solutiontime) {
+		buf += sprintf(buf, "%d,", solutiontime - when - 1);
 	}
 	*buf++ = '\0';
 	return 0;
@@ -113,7 +127,7 @@ int main(int argc, char *argv[])
 			       solution.number,
 			       solution.passwd);
 		} else {
-			if (compressjsonsolution(&solution.moves, movebuf)) {
+			if (compressjsonsolution(&solution.moves, solution.besttime, movebuf)) {
 				continue;
 			}
 			printf("  {\"class\":\"solution\",\n"
