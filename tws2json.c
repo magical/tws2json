@@ -369,7 +369,8 @@ int main(int argc, char *argv[])
 	clearfileinfo(&file);
 
 	if (argc < 2) {
-		return 1;
+	    fprintf(stderr, "usage: tws2json file.tws\n");
+	    return 1;
 	}
 	if (!fileopen(&file, argv[1], "rb", "file error")) {
 		return 1;
