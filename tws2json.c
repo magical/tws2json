@@ -417,10 +417,17 @@ int main(int argc, char *argv[])
 	       ruleset_names[ruleset],
 	       extrasize, extra);
 
+	int first = 1;
 	while (readsolution(&file, &solution)) {
 		if (!solution.number) {
 			continue;
 		}
+		// Trailing commas are not allowed.
+		if (!first) {
+			printf(",\n");
+			fflush(stdout);
+		}
+		first = 0;
 		// write json level
 		if (!solution.moves.count) {
 			//just the number and password
@@ -447,10 +454,8 @@ int main(int argc, char *argv[])
 			       solution.rndseed,
 			       bdatae(movestr, "<out of memory>"));
 		}
-		printf(",\n");
-		fflush(stdout);
 	}
-	printf("]}\n");
+	printf("\n]}\n");
 
 	bdestroy(movestr);
 	fileclose(&file, "error");
