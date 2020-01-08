@@ -422,11 +422,10 @@ int main(int argc, char *argv[])
 	// write json header
 	printf("{\"class\":\"tws\",\n"
 	       " \"ruleset\":\"%s\",\n"
-	       " \"levelset\":\"%.*s\",\n"
+	       " \"levelset\":\"\",\n"
 	       " \"generator\":\"tws2json/" VERSION "\",\n"
 	       " \"solutions\":[\n",
-	       ruleset_names[ruleset],
-	       extrasize, extra);
+	       ruleset_names[ruleset]);
 
 	movestr = bfromcstr("");
 	int first = 1;
