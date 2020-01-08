@@ -13,7 +13,7 @@ Yes.
 
 First compile it.
 
-    % redo
+    % make
 
 Then run
     
