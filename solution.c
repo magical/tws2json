@@ -232,6 +232,7 @@ int readsolutionheader(fileinfo *file, int *ruleset, int *flags,
 
 /* Write the header bytes to the given solution file.
  */
+/*
 static int writesolutionheader(fileinfo *file, int ruleset, int flags,
 			       int extrasize, unsigned char const *extra)
 {
@@ -241,9 +242,11 @@ static int writesolutionheader(fileinfo *file, int ruleset, int flags,
 	&& filewriteint8(file, extrasize, NULL)
 	&& filewrite(file, extra, extrasize, NULL);
 }
+*/
 
 /* Write the name of the level set to the given solution file.
  */
+/*
 static int writesolutionsetname(fileinfo *file, char const *setname)
 {
     char	zeroes[16] = "";
@@ -254,6 +257,7 @@ static int writesolutionsetname(fileinfo *file, char const *setname)
 	&& filewrite(file, zeroes, 16, NULL)
 	&& filewrite(file, setname, n, NULL);
 }
+*/
 
 /*
  * Solution translation.
