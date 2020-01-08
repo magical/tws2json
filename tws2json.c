@@ -392,7 +392,7 @@ int main(int argc, char *argv[])
 	fileinfo file;
 
 	unsigned char extra[256];
-	bstring movestr = bfromcstr("");
+	bstring movestr = NULL;
 
 	clearfileinfo(&file);
 
@@ -405,6 +405,13 @@ int main(int argc, char *argv[])
 	}
 
 	if (!readsolutionheader(&file, &ruleset, &flags, &extrasize, extra)) {
+		fileclose(&file, "error");
+		return 1;
+	}
+
+	if (!(1 <= ruleset && ruleset <= 2)) {
+		errmsg("error", "Unknown ruleset (%d)\n", ruleset);
+		fileclose(&file, "error");
 		return 1;
 	}
 
@@ -417,6 +424,7 @@ int main(int argc, char *argv[])
 	       ruleset_names[ruleset],
 	       extrasize, extra);
 
+	movestr = bfromcstr("");
 	int first = 1;
 	while (readsolution(&file, &solution)) {
 		if (!solution.number) {
@@ -457,6 +465,7 @@ int main(int argc, char *argv[])
 	}
 	printf("\n]}\n");
 
+	destroymovelist(&solution.moves);
 	bdestroy(movestr);
 	fileclose(&file, "error");
 
