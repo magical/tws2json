@@ -485,18 +485,23 @@ int readsolution(fileinfo *file, solutioninfo *solution)
 	return TRUE;
     solution->solutionsize = size;
     data = filereadbuf(file, size, "unexpected EOF");
-    if (!data || (size <= 16 && size != 6))
+    if (!data || (size <= 16 && size != 6)) {
+	free(data);
 	return fileerr(file, "invalid data in solution file");
+    }
     solution->number = (data[1] << 8) | data[0];
     memcpy(solution->passwd, data + 2, 4);
     solution->passwd[4] = '\0';
-    if (size == 6)
+    if (size == 6) {
+	free(data);
 	return TRUE;
+    }
 
     solution->besttime = data[12] | (data[13] << 8)
 				  | (data[14] << 16)
 				  | (data[15] << 24);
     if (!solution->number) {
+	free(data);
 	return TRUE;
     }
 
