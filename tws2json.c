@@ -368,18 +368,22 @@ int compressjsonsolution(actlist *moves, unsigned long solutiontime, bstring mov
     for (i = 0; i < moves->count; i++) {
 	r = jsoncompress_addmove(&jsoncompress, moves->list[i], i);
 	if (r < 0) {
-	    return r;
+	    goto cleanup;
 	}
     }
     r = jsoncompress_finish(&jsoncompress, solutiontime);
     if (r < 0) {
-	return r;
+	goto cleanup;
     }
 
     bassign(movestr, jsoncompress.str);
     jsoncompress_free(&jsoncompress);
 
     return 0;
+
+cleanup:
+    jsoncompress_free(&jsoncompress);
+    return r;
 }
 
 int main(int argc, char *argv[])
