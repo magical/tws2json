@@ -447,6 +447,7 @@ int main(int argc, char *argv[])
 	movestr = bfromcstr("");
 	for (first = 1;; first = 0) {
 		if (!(first && skipfirstread)) {
+			clearsolution(&game);
 			memset(&game, 0, sizeof game);
 			ok = readsolution(&file, &game);
 			if (!ok) {
@@ -477,7 +478,6 @@ int main(int argc, char *argv[])
 			}
 			if (compressjsonsolution(&solution.moves, game.besttime, movestr)) {
 				// TODO: print error message
-				clearsolution(&game);
 				continue;
 			}
 			printf("  {\"class\":\"solution\",\n"
@@ -494,10 +494,10 @@ int main(int argc, char *argv[])
 			       solution.rndseed,
 			       bdatae(movestr, "<out of memory>"));
 		}
-		clearsolution(&game);
 	}
 	printf("\n]}\n");
 
+	clearsolution(&game);
 	destroymovelist(&solution.moves);
 	bdestroy(movestr);
 	fileclose(&file, "error");
