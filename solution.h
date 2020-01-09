@@ -187,6 +187,6 @@ extern int expandsolution(solutioninfo *solution, gamesetup const *game);
  * data as part of the level's setup. FALSE is returned if an error
  * occurs. (It is not an error to compress the null solution.)
  */
-//extern int contractsolution(solutioninfo const *solution, gamesetup *game);
+extern int contractsolution(solutioninfo const *solution, gamesetup *game);
 
 #endif

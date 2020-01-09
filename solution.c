@@ -350,7 +350,6 @@ int expandsolution(solutioninfo *solution, gamesetup const *game)
 /* Take the given solution and compress it, storing the compressed
  * data as part of the level's setup.
  */
-/*
 int contractsolution(solutioninfo const *solution, gamesetup *game)
 {
     action const       *move;
@@ -458,7 +457,6 @@ int contractsolution(solutioninfo const *solution, gamesetup *game)
 	game->solutiondata = data;
     return TRUE;
 }
-*/
 
 /*
  * File I/O for level solutions.
