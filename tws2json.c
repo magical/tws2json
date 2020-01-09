@@ -393,6 +393,7 @@ int main(int argc, char *argv[])
 	int flags;
 	int extrasize;
 	solutioninfo solution = {};
+	gamesetup game;
 	fileinfo file;
 
 	unsigned char extra[256];
@@ -429,8 +430,14 @@ int main(int argc, char *argv[])
 
 	movestr = bfromcstr("");
 	int first = 1;
-	while (readsolution(&file, &solution)) {
-		if (!solution.number) {
+	for(;;) {
+		int ok;
+		memset(&game, 0, sizeof game);
+		ok = readsolution(&file, &game);
+		if (!ok) {
+			break;
+		}
+		if (!game.number) {
 			continue;
 		}
 		// Trailing commas are not allowed.
@@ -440,15 +447,22 @@ int main(int argc, char *argv[])
 		}
 		first = 0;
 		// write json level
-		if (!solution.moves.count) {
+		if (game.solutionsize == 0) {
 			//just the number and password
 			printf("  {\"class\":\"solution\",\n"
 			       "   \"number\":%u,\n"
 			       "   \"password\":\"%.4s\"}",
-			       solution.number,
-			       solution.passwd);
+			       game.number,
+			       game.passwd);
 		} else {
-			if (compressjsonsolution(&solution.moves, solution.besttime, movestr)) {
+			ok = expandsolution(&solution, &game);
+			if (!ok) {
+				// TODO: print error message
+				continue;
+			}
+			if (compressjsonsolution(&solution.moves, game.besttime, movestr)) {
+				// TODO: print error message
+				clearsolution(&game);
 				continue;
 			}
 			printf("  {\"class\":\"solution\",\n"
@@ -458,13 +472,14 @@ int main(int argc, char *argv[])
 			       "   \"stepping\":%d,\n"
 			       "   \"rndseed\":%lu,\n"
 			       "   \"moves\":\"%s\"}",
-			       solution.number,
-			       solution.passwd,
+			       game.number,
+			       game.passwd,
 			       (int)solution.rndslidedir,
 			       (int)solution.stepping,
 			       solution.rndseed,
 			       bdatae(movestr, "<out of memory>"));
 		}
+		clearsolution(&game);
 	}
 	printf("\n]}\n");
 

@@ -96,14 +96,10 @@ typedef struct actlist {
  */
 typedef	struct solutioninfo {
     actlist		moves;		/* the actual moves of the solution */
-    unsigned long	solutionsize;	/* the size of the read solution data */
-    unsigned long	besttime;
     unsigned long	rndseed;	/* the PRNG's initial seed */
     unsigned long	flags;		/* other flags (currently unused) */
-    unsigned short	number;		/* the number of the level */
     unsigned char	rndslidedir;	/* random slide's initial direction */
     signed char		stepping;	/* the timer offset */
-    char		passwd[5];	/* the level's password */
 } solutioninfo;
 
 /* The range of relative mouse moves is a 19x19 square around Chip.
@@ -113,6 +109,36 @@ typedef	struct solutioninfo {
 #define	MOUSERANGEMIN	-9
 #define	MOUSERANGEMAX	+9
 #define	MOUSERANGE	19
+
+enum { CmdKeyMoveLast = NORTH | WEST | SOUTH | EAST };
+
+/* True if cmd is a simple directional command, i.e. a single
+ * orthogonal or diagonal move (or CmdNone).
+ */
+#define	directionalcmd(cmd)	(((cmd) & ~CmdKeyMoveLast) == 0)
+
+/* The collection of data maintained for each level.
+ */
+typedef	struct gamesetup {
+    int			number;		/* numerical ID of the level */
+    int			time;		/* no. of seconds allotted */
+    int			besttime;	/* time (in ticks) of best solution */
+    int			sgflags;	/* saved-game flags (see below) */
+    int			levelsize;	/* size of the level data */
+    int			solutionsize;	/* size of the saved solution data */
+    unsigned char      *leveldata;	/* the data defining the level */
+    unsigned char      *solutiondata;	/* the player's best solution so far */
+    unsigned long	levelhash;	/* the level data's hash value */
+    char const	       *unsolvable;	/* why level is unsolvable, or NULL */
+    char		name[256];	/* name of the level */
+    char		passwd[256];	/* the level's password */
+} gamesetup;
+
+/* Flags associated with a saved game.
+ */
+#define	SGF_HASPASSWD		0x0001	/* player knows the level's password */
+#define	SGF_REPLACEABLE		0x0002	/* solution is marked as replaceable */
+#define	SGF_SETNAME		0x0004	/* internal to solution.c */
 
 
 /*
@@ -139,19 +165,28 @@ extern void destroymovelist(actlist *list);
  * the option bytes (bytes 5-6). extra receives any bytes in the
  * header that this code doesn't recognize.
  */
-int readsolutionheader(fileinfo *file, int *ruleset, int *flags,
-		       int *extrasize, unsigned char *extra);
+extern int readsolutionheader(fileinfo *file, int *ruleset, int *flags,
+		              int *extrasize, unsigned char *extra);
 
 /* Read the data of a one complete solution from the given file into
- * a solutioninfo structure.
+ * a gamesetup structure.
  */
-int readsolution(fileinfo *file, solutioninfo *solution);
+extern int readsolution(fileinfo *file, gamesetup* game);
+
+/* Free all memory allocated for storing a solution.
+ */
+extern void clearsolution(gamesetup *game);
+
+/* Expand a level's solution data into the actual solution, including
+ * the full list of moves. FALSE is returned if the solution is
+ * invalid or absent.
+ */
+extern int expandsolution(solutioninfo *solution, gamesetup const *game);
 
 /* Take the given solution and compress it, storing the compressed
  * data as part of the level's setup. FALSE is returned if an error
  * occurs. (It is not an error to compress the null solution.)
  */
 //extern int contractsolution(solutioninfo const *solution, gamesetup *game);
-
 
 #endif

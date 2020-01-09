@@ -265,27 +265,27 @@ static int writesolutionsetname(fileinfo *file, char const *setname)
 
 /* Expand a level's solution data into an actual list of moves.
  */
-static int expandsolution(solutioninfo *solution, unsigned char *solutiondata, unsigned long solutionsize)
+int expandsolution(solutioninfo *solution, gamesetup const *game)
 {
     unsigned char const	       *dataend;
     unsigned char const	       *p;
     action			act;
     int				n;
 
-    if (solutionsize <= 16)
+    if (game->solutionsize <= 16)
 	return FALSE;
 
-    solution->flags = solutiondata[6];
-    solution->rndslidedir = indextodir(solutiondata[7] & 7);
-    solution->stepping = (solutiondata[7] >> 3) & 7;
-    solution->rndseed = solutiondata[8] | (solutiondata[9] << 8)
-					      | (solutiondata[10] << 16)
-					      | (solutiondata[11] << 24);
+    solution->flags = game->solutiondata[6];
+    solution->rndslidedir = indextodir(game->solutiondata[7] & 7);
+    solution->stepping = (game->solutiondata[7] >> 3) & 7;
+    solution->rndseed = game->solutiondata[8] | (game->solutiondata[9] << 8)
+					      | (game->solutiondata[10] << 16)
+					      | (game->solutiondata[11] << 24);
 
     initmovelist(&solution->moves);
     act.when = -1;
-    p = solutiondata + 16;
-    dataend = solutiondata + solutionsize;
+    p = game->solutiondata + 16;
+    dataend = game->solutiondata + game->solutionsize;
     while (p < dataend) {
 	switch (*p & 0x03) {
 	  case 0:
@@ -342,7 +342,7 @@ static int expandsolution(solutioninfo *solution, unsigned char *solutiondata, u
     return TRUE;
 
   truncated:
-    errmsg(NULL, "level %d: truncated solution data", solution->number);
+    errmsg(NULL, "level %d: truncated solution data", game->number);
     initmovelist(&solution->moves);
     return FALSE;
 }
@@ -465,20 +465,18 @@ int contractsolution(solutioninfo const *solution, gamesetup *game)
  */
 
 /* Read the data of a one complete solution from the given file into
- * a solutioninfo structure.
+ * a gamesetup structure.
  */
-int readsolution(fileinfo *file, solutioninfo *solution)
+int readsolution(fileinfo *file, gamesetup *game)
 {
     unsigned long	size;
-    unsigned char      *data;
-    int ret;
 
-    solution->number = 0;
-    solution->besttime = TIME_NIL;
+    game->number = 0;
+    game->sgflags = 0;
+    game->besttime = TIME_NIL;
 
-    solution->solutionsize = 0;
-    solution->moves.count = 0;
-    data = NULL;
+    game->solutionsize = 0;
+    game->solutiondata = NULL;
 
     if (!file->fp)
 	return TRUE;
@@ -487,31 +485,25 @@ int readsolution(fileinfo *file, solutioninfo *solution)
 	return FALSE;
     if (!size)
 	return TRUE;
-    solution->solutionsize = size;
-    data = filereadbuf(file, size, "unexpected EOF");
-    if (!data || (size <= 16 && size != 6)) {
-	free(data);
+    game->solutionsize = size;
+    game->solutiondata = filereadbuf(file, size, "unexpected EOF");
+    if (!game->solutiondata || (size <= 16 && size != 6)) {
+	free(game->solutiondata);
 	return fileerr(file, "invalid data in solution file");
     }
-    solution->number = (data[1] << 8) | data[0];
-    memcpy(solution->passwd, data + 2, 4);
-    solution->passwd[4] = '\0';
-    if (size == 6) {
-	free(data);
+    game->number = (game->solutiondata[1] << 8) | game->solutiondata[0];
+    memcpy(game->passwd, game->solutiondata + 2, 4);
+    game->passwd[4] = '\0';
+    game->sgflags |= SGF_HASPASSWD;
+    if (size == 6)
 	return TRUE;
-    }
 
-    solution->besttime = data[12] | (data[13] << 8)
-				  | (data[14] << 16)
-				  | (data[15] << 24);
-    if (!solution->number) {
-	free(data);
-	return TRUE;
-    }
+    game->besttime = game->solutiondata[12] | (game->solutiondata[13] << 8)
+					    | (game->solutiondata[14] << 16)
+					    | (game->solutiondata[15] << 24);
 
-    /*
-    size -= 16;
     if (!game->number && !*game->passwd) {
+	size -= 16;
 	game->sgflags |= SGF_SETNAME;
 	if (size > 255)
 	    size = 255;
@@ -521,12 +513,8 @@ int readsolution(fileinfo *file, solutioninfo *solution)
 	game->solutionsize = 0;
 	game->solutiondata = NULL;
     }
-    */
 
-    ret = expandsolution(solution, data, size);
-
-    free(data);
-    return ret;
+    return TRUE;
 }
 
 /* Write the data of one complete solution from the appropriate fields
@@ -549,3 +537,14 @@ static int writesolution(fileinfo *file, gamesetup const *game)
 
     return TRUE;
 }*/
+
+/* Free all memory allocated for storing a solution.
+ */
+void clearsolution(gamesetup *game)
+{
+    free(game->solutiondata);
+    game->besttime = TIME_NIL;
+    game->sgflags = 0;
+    game->solutionsize = 0;
+    game->solutiondata = NULL;
+}
