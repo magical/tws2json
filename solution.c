@@ -486,6 +486,8 @@ int readsolution(fileinfo *file, gamesetup *game)
     game->solutiondata = filereadbuf(file, size, "unexpected EOF");
     if (!game->solutiondata || (size <= 16 && size != 6)) {
 	free(game->solutiondata);
+	game->solutionsize = 0;
+	game->solutiondata = NULL;
 	return fileerr(file, "invalid data in solution file");
     }
     game->number = (game->solutiondata[1] << 8) | game->solutiondata[0];
