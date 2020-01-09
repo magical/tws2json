@@ -14,5 +14,8 @@ fileio.o: fileio.c err.h fileio.h
 solution.o: solution.c err.h fileio.h solution.h
 tws2json.o: tws2json.c bstrlib.h solution.h fileio.h err.h version.h
 
+check: tws2json test.sh
+	sh test.sh
+
 clean:
 	rm tws2json tws2json.o solution.o fileio.o err.o bstrlib.o
