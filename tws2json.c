@@ -395,6 +395,9 @@ int main(int argc, char *argv[])
 	solutioninfo solution = {};
 	gamesetup game;
 	fileinfo file;
+	int first;
+	int skipfirstread;
+	int ok;
 
 	unsigned char extra[256];
 	bstring movestr = NULL;
@@ -420,24 +423,34 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
+	// there might be some additional metadata after the header
+	// in a solution record for level 0
+	memset(&game, 0, sizeof game);
+	ok = readsolution(&file, &game);
+	skipfirstread = 0;
+	if (ok && game.number != 0) {
+		skipfirstread = 1;
+	}
+
 	// write json header
-	printf("{\"class\":\"tws\",\n"
-	       " \"ruleset\":\"%s\",\n"
-	       " \"levelset\":\"\",\n"
-	       " \"generator\":\"tws2json/" VERSION "\",\n"
-	       " \"solutions\":[\n",
-	       ruleset_names[ruleset]);
+	printf("{\"class\":\"tws\",\n");
+	printf(" \"ruleset\":\"%s\",\n", ruleset_names[ruleset]);
+	if (game.sgflags & SGF_SETNAME) {
+		printf(" \"levelset\":\"%s\",\n", game.name);
+	}
+	printf(" \"generator\":\"tws2json/" VERSION "\",\n");
+	printf(" \"solutions\":[\n");
 
 	movestr = bfromcstr("");
-	int first = 1;
-	for(;;) {
-		int ok;
-		memset(&game, 0, sizeof game);
-		ok = readsolution(&file, &game);
-		if (!ok) {
-			break;
+	for (first = 1;; first = 0) {
+		if (!(first && skipfirstread)) {
+			memset(&game, 0, sizeof game);
+			ok = readsolution(&file, &game);
+			if (!ok) {
+				break;
+			}
 		}
-		if (!game.number) {
+		if (game.number == 0) {
 			continue;
 		}
 		// Trailing commas are not allowed.
@@ -445,7 +458,6 @@ int main(int argc, char *argv[])
 			printf(",\n");
 			fflush(stdout);
 		}
-		first = 0;
 		// write json level
 		if (game.solutionsize == 0) {
 			//just the number and password
