@@ -390,7 +390,7 @@ int main(int argc, char *argv[])
 {
 	// read the solution file
 	int ruleset;
-	int flags;
+	int currentlevel;
 	int extrasize;
 	solutioninfo solution = {};
 	gamesetup game;
@@ -412,7 +412,7 @@ int main(int argc, char *argv[])
 		return 1;
 	}
 
-	if (!readsolutionheader(&file, &ruleset, &flags, &extrasize, extra)) {
+	if (!readsolutionheader(&file, &ruleset, &currentlevel, &extrasize, extra)) {
 		fileclose(&file, "error");
 		return 1;
 	}
@@ -435,6 +435,9 @@ int main(int argc, char *argv[])
 	// write json header
 	printf("{\"class\":\"tws\",\n");
 	printf(" \"ruleset\":\"%s\",\n", ruleset_names[ruleset]);
+	if (currentlevel != 0) {
+		printf(" \"currentlevel\":%d,\n", currentlevel);
+	}
 	if (game.sgflags & SGF_SETNAME) {
 		printf(" \"levelset\":\"%s\",\n", game.name);
 	}
