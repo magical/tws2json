@@ -16,14 +16,14 @@ First compile it.
     % make
 
 Then run
-    
+
     % ./tws2json ~/.tworld/intro-ms.dac.tws
 
 You should see something like this:
 
     {"class":"tws",
      "ruleset":"ms",
-     "levelset":"",
+     "levelset":"intro-ms.dac",
      "generator":"tws2json/0.1",
      "solutions":[
       {"class":"solution",
@@ -52,8 +52,6 @@ The format is still in flux though, so don't get too comfortable.
 Conversion from JSON to TWS isn't yet supported.
 
 Mouse moves are not yet supported.
-
-The levelset name isn't loaded properly.
 
 ### License ###
 
