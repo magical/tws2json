@@ -1,0 +1,15 @@
+{"class":"tws",
+ "ruleset":"ms",
+ "currentlevel":2,
+ "levelset":"intro-ms.dac",
+ "generator":"tws2json/0.1.1",
+ "solutions":[
+  {"class":"solution",
+   "number":1,
+   "password":"BDHP",
+   "rndslidedir":1,
+   "stepping":0,
+   "rndseed":138563930,
+   "moves":"3L,,2Lr,,r,,8R5L5D5L3D3U4R,,d,,d,,R2D4R,u,,UR3U3D5L2D3L6R3L6Dd"},
+
+]}
