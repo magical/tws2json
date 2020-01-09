@@ -45,7 +45,7 @@ The movestring is based on the [notation][] commonly used by players. See [forma
 
 The format is still in flux though, so don't get too comfortable.
 
-[notation]: http://chipschallenge.wikia.com/wiki/Directional_notation
+[notation]: https://wiki.bitbusters.club/Directional_notation
 
 ### Bugs ###
 
