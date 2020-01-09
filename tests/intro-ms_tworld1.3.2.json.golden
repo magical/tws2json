@@ -2,7 +2,7 @@
  "ruleset":"ms",
  "currentlevel":2,
  "levelset":"intro-ms.dac",
- "generator":"tws2json/0.1.1",
+ "generator":"tws2json/0.2",
  "solutions":[
   {"class":"solution",
    "number":1,
