@@ -50,14 +50,6 @@ enum {
     Ruleset_Count
 };
 
-/* Pseudorandom number generators.
- */
-typedef	struct prng {
-    unsigned long	initial;	/* initial seed value */
-    unsigned long	value;		/* latest random value */
-    char		shared;		/* FALSE if independent sequence */
-} prng;
-
 /*
  * Definitions used in game play.
  */
