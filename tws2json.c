@@ -48,7 +48,7 @@ int jsoncompress_rle_flush(jsoncompressinfo *self);
  * @param duration 1 or 4
  * @returns 0 on success. -1 on failure.
  */
-int printdir(jsoncompressinfo *self, int dir, int duration)
+static int printdir(jsoncompressinfo *self, int dir, int duration)
 {
     int r = BSTR_OK;
 
@@ -88,7 +88,7 @@ unknown:
     return -1;
 }
 
-int printnum(jsoncompressinfo *self, int num)
+static int printnum(jsoncompressinfo *self, int num)
 {
     if (BSTR_OK != bformata(self->str, "%d", num)) {
 	return -1;
@@ -96,7 +96,7 @@ int printnum(jsoncompressinfo *self, int num)
     return 0;
 }
 
-int printwait(jsoncompressinfo *self, int count)
+static int printwait(jsoncompressinfo *self, int count)
 {
     int r;
 
