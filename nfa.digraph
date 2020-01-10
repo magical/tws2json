@@ -1,0 +1,83 @@
+
+// LRUD   Move (4 frames)
+// lrud   Move (1 frame)
+// .      Wait (4 frames)
+// ,      Wait (1 frame)
+// 
+// X+X    Diagonal move
+// 
+// *X     Mouse click (one direction)
+// *X;X   Mouse click (two directions)
+// *.     Mouse click (on Chip)
+
+
+// [0-9]*( [.,]
+//       | [LRUD] (\+ [LRUD])?
+//       | [lrud] (\+ [lrud])?
+//       | \* ( \. | [2-9]?[LRUD] ( ; [2-9]LRUD? ) )
+//       )
+
+digraph {
+    rankdir=LR;
+
+    start [peripheries=2];
+    end_move [peripheries=2];
+
+    optional_number [label=1];
+    digit_or_move [label=2];
+    //move [label=3];
+    //wait [label=4];
+    //diagonal [label=5];
+    mouse [label=6];
+    end_move [label=7];
+    mouse1a [label=8];
+    mouse1b [label=9];
+    mouse2a [label=10];
+    mouse2b [label=11];
+    moveupper [label=12];
+    movelower [label=13];
+    diagonalupper[label=14];
+    diagonallower[label=15];
+
+
+    start -> optional_number;
+
+    optional_number -> digit_or_move [label="1-9"];
+    optional_number -> mouse [label="*"];
+    optional_number -> moveupper [label="UDLR"];
+    optional_number -> movelower [label="udlr"];
+    //optional_number -> ;
+
+    digit_or_move -> digit_or_move [label="0-9"];
+    digit_or_move -> moveupper [label="UDLR"];
+    digit_or_move -> movelower [label="udlr"];
+    digit_or_move -> end_move [label=", ."];
+
+    moveupper -> diagonalupper [label="+"];
+    moveupper -> end_move ;
+
+    movelower -> diagonallower [label="+"];
+    movelower -> end_move ;
+
+    diagonalupper -> end_move [label="UDLR"];
+    diagonallower -> end_move [label="udlr"];
+
+    end_move ->optional_number;
+
+    // *.
+    mouse -> end_move [label="."];
+
+    // *2U
+    mouse -> mouse1a;
+    mouse -> mouse1a [label="2-9"];
+    mouse1a -> mouse1b [label="UDLR"];
+    mouse1b -> end_move;
+
+    // *L;2U
+    mouse1b -> mouse2a [label=";"];
+    mouse2a -> mouse2b;
+    mouse2a -> mouse2b [label="2-9"];
+    mouse2b -> end_move [label="UDLR"];
+}
+
+

@@ -1,0 +1,97 @@
+
+// LRUD   Move (4 frames)
+// lrud   Move (1 frame)
+// .      Wait (4 frames)
+// ,      Wait (1 frame)
+// 
+// X+X    Diagonal move
+// 
+// *X     Mouse click (one direction)
+// *X;X   Mouse click (two directions)
+// *.     Mouse click (on Chip)
+
+
+// [0-9]*( [.,]
+//       | [LRUD] (\+ [LRUD])?
+//       | [lrud] (\+ [lrud])?
+//       | \* ( \. | [2-9]?[LRUD] ( ; [2-9]LRUD? ) )
+//       )
+
+digraph {
+    rankdir=LR;
+
+    new_move [peripheries=2];
+    //end_move [peripheries=2];
+
+    new_move [label=1];
+    digit_or_move [label=2];
+    //move [label=3];
+    //wait [label=4];
+    //diagonal [label=5];
+    mouse [label=6];
+    //end_move [label=7];
+    mouse1a [label=8];
+    mouse1b [label=9];
+    mouse2a [label=10];
+    mouse2b [label=11];
+    moveupper [label=12];
+    movelower [label=13];
+    diagonalupper[label=14];
+    diagonallower[label=15];
+
+
+    start -> new_move;
+
+    new_move -> digit_or_move [label="1-9"];
+    new_move -> mouse [label="*"];
+    new_move -> moveupper [label="UDLR"];
+    new_move -> movelower [label="udlr"];
+    //new_move -> ;
+
+    digit_or_move -> digit_or_move [label="0-9"];
+    digit_or_move -> moveupper [label="UDLR"];
+    digit_or_move -> movelower [label="udlr"];
+    digit_or_move -> new_move [label=", .", style=bold];
+
+    moveupper -> diagonalupper [label="+"];
+    //moveupper -> end_move ;
+    moveupper -> digit_or_move [label="1-9", style=dashed];
+    moveupper -> mouse [label="*", style=dashed];
+    moveupper -> moveupper [label="UDLR", style=dashed];
+    moveupper -> movelower [label="udlr", style=dashed];
+
+    movelower -> diagonallower [label="+"];
+    //movelower -> end_move ;
+    movelower -> digit_or_move [label="1-9", style=dashed];
+    movelower -> mouse [label="*", style=dashed];
+    movelower -> moveupper [label="UDLR", style=dashed];
+    movelower -> movelower [label="udlr", style=dashed];
+
+    diagonalupper -> new_move [label="UDLR", style=bold];
+    diagonallower -> new_move [label="udlr", style=bold];
+
+    //end_move ->new_move;
+
+    // *.
+    mouse -> new_move [label="."];
+
+    // *2U
+    mouse -> mouse1a [label="2-9"];
+    mouse -> mouse1b [label="UDLR"];
+    mouse1a -> mouse1b [label="UDLR"];
+    //mouse1b -> end_move;
+    mouse1b -> digit_or_move [label="1-9", style=dashed];
+    mouse1b -> mouse [label="*", style=dashed];
+    mouse1b -> moveupper [label="UDLR", style=dashed];
+    mouse1b -> movelower [label="udlr", style=dashed];
+
+    // *L;2U
+    mouse1b -> mouse2a [label=";"];
+    mouse2a -> mouse2b [label="2-9"];
+    mouse2a -> new_move [label="UDLR", style=bold];
+    mouse2b -> new_move [label="UDLR", style=bold];
+
+    new_move -> new_move [label="<space>"];
+}
+
+
