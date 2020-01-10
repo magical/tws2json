@@ -1,15 +1,9 @@
 #include <stddef.h>
 #include <stdbool.h>
+#include <stdio.h>
 
 #include "err.h"
-//#include "solution.h"
-typedef struct actlist actlist;
-extern void initmovelist(actlist *list);
-
-#ifndef EOF
-#define EOF -1
-#endif
-
+#include "solution.h"
 
 bool myisdigit(int c) { return '0' <= c && c <= '9'; }
 bool isuppermove(int c) { return c == 'U' || c == 'D' || c == 'L' || c == 'R'; }
@@ -20,7 +14,6 @@ bool ismouse(int c) { return c == '*'; }
 // states
 enum parser_state {
         error,
-        flush,
 	new_move,
 	digit_or_move,
 	mouse,
@@ -34,19 +27,56 @@ enum parser_state {
 	diagonallower,
 };
 
+int letter2move(int c) {
+    switch (c) {
+    case 'U': return NORTH;
+    case 'D': return SOUTH;
+    case 'L': return WEST;
+    case 'R': return EAST;
+    case 'u': return NORTH;
+    case 'd': return SOUTH;
+    case 'l': return WEST;
+    case 'r': return EAST;
+    }
+    return -1;
+}
+
+void emitmove(actlist* moves, long* time, int count, int move, int duration) {
+    action a;
+    int i;
+    for (i = 0; i < count; i++) {
+        a.when = *time;
+        a.dir = move;
+        addtomovelist(moves, a);
+        *time += duration;
+    }
+}
+
+void emitwait(actlist* moves, long* time, int count, int duration) {
+    *time += count * duration;
+}
+
+void emitmouse(actlist* moves, long* time, int x, int y) {
+    int move = 16 + ((y - MOUSERANGEMIN) * MOUSERANGE) + (x - MOUSERANGEMIN);
+    action a;
+    a.when = *time;
+    a.dir = move;
+    addtomovelist(moves, a);
+    *time += 1;
+}
 
 int parsemoves(actlist* moves, const char* movestring, int len) {
+    enum parser_state state = new_move;
+    long time = 0;
     int count;
     int move;
-    enum parser_state state = new_move;
-    int x, y;
-    int digit1, digit2;
-    int dir1, dir2;
+    int duration;
+    int x, y, digit, dir;
+    int pos;
 
     initmovelist(moves);
 
-    int pos = 0;
-    for (;;) {
+    for (pos = 0;;) {
         int c;
 
         pos += 1;
@@ -56,11 +86,7 @@ int parsemoves(actlist* moves, const char* movestring, int len) {
             c = EOF;
         }
 
-        if (0) {
-        flush_and_retry:
-            /* TODO: flush move */
-            state = new_move;
-        }
+    retry:
         switch (state) {
 
 //    new_move -> digit_or_move [label="1-9"];
@@ -74,17 +100,23 @@ int parsemoves(actlist* moves, const char* movestring, int len) {
                 count = c - '0';
                 state = digit_or_move;
             } else if (ismouse(c)) {
-                move = '*';
                 state = mouse;
             } else if (isuppermove(c)) {
-                move = c;
+                move = letter2move(c);
+                duration = 4;
                 state = moveupper;
             } else if (islowermove(c)) {
-                move = c;
+                move = letter2move(c);
+                duration = 1;
                 state = movelower;
             } else if (iswait(c)) {
-                move = c;
-                state = flush;
+                if (c == '.') {
+                    duration = 4;
+                } else {
+                    duration = 1;
+                }
+                emitwait(moves, &time, count, duration);
+                state = new_move;
             } else if (c == ' ') {
                 /* pass */
             } else if (c == EOF) {
@@ -101,14 +133,21 @@ int parsemoves(actlist* moves, const char* movestring, int len) {
             if (myisdigit(c)) {
                 count = count*10 + (c - '0');
             } else if (isuppermove(c)) {
-                move = c;
+                move = letter2move(c);
+                duration = 4;
                 state = moveupper;
             } else if (islowermove(c)) {
-                move = c;
+                move = letter2move(c);
+                duration = 1;
                 state = movelower;
             } else if (iswait(c)) {
-                move = c;
-                state = flush;
+                if (c == '.') {
+                    duration = 4;
+                } else {
+                    duration = 1;
+                }
+                emitwait(moves, &time, count, duration);
+                state = new_move;
             } else {
                 state = error;
             }
@@ -120,7 +159,9 @@ int parsemoves(actlist* moves, const char* movestring, int len) {
             if (c == '+') {
                 state = diagonalupper;
             } else {
-                goto flush_and_retry;
+                emitmove(moves, &time, count, move, duration);
+                state = new_move;
+                goto retry;
             }
             break;
 
@@ -130,15 +171,18 @@ int parsemoves(actlist* moves, const char* movestring, int len) {
             if (c == '+') {
                 state = diagonallower;
             } else {
-                goto flush_and_retry;
+                emitmove(moves, &time, count, move, duration);
+                state = new_move;
+                goto retry;
             }
             break;
 
 //    diagonalupper -> new_move [label="UDLR", style=bold];
         case diagonalupper:
             if (isuppermove(c)) {
-                move += c;
-                state = flush;
+                move |= letter2move(c);
+                emitmove(moves, &time, count, move, duration);
+                state = new_move;
             } else {
                 state = error;
             }
@@ -147,8 +191,9 @@ int parsemoves(actlist* moves, const char* movestring, int len) {
 //    diagonallower -> new_move [label="udlr", style=bold];
         case diagonallower:
             if (islowermove(c)) {
-                move += c;
-                state = flush;
+                move |= letter2move(c);
+                emitmove(moves, &time, count, move, duration);
+                state = new_move;
             } else {
                 state = error;
             }
@@ -160,21 +205,22 @@ int parsemoves(actlist* moves, const char* movestring, int len) {
         case mouse:
             x = 0;
             y = 0;
-            digit1 = 0;
-            digit2 = 0;
-            dir1 = 0;
-            dir2 = 0;
-            move = '*';
+            digit = 0;
+            dir = 0;
             if (c == '.') {
-                x = 0;
-                y = 0;
-                state = flush;
+                emitmouse(moves, &time, 0, 0);
+                state = new_move;
             } else if (myisdigit(c)) {
-                digit1 = c - '0';
+                digit = c - '0';
                 state = mouse1a;
             } else if (isuppermove(c)) {
-                digit1 = 1;
-                dir1 = c;
+                dir = c;
+                switch (dir) {
+                case 'U': y = -1; break;
+                case 'D': y = +1; break;
+                case 'L': x = -1; break;
+                case 'R': x = +1; break;
+                }
                 state = mouse1b;
             } else {
                 state = error;
@@ -184,7 +230,13 @@ int parsemoves(actlist* moves, const char* movestring, int len) {
 //    mouse1a -> mouse1b [label="UDLR"];
         case mouse1a:
             if (isuppermove(c)) {
-                dir1 = c;
+                dir = c;
+                switch (dir) {
+                case 'U': y = -digit; break;
+                case 'D': y = +digit; break;
+                case 'L': x = -digit; break;
+                case 'R': x = +digit; break;
+                }
                 state = mouse1b;
             } else {
                 state = error;
@@ -197,7 +249,9 @@ int parsemoves(actlist* moves, const char* movestring, int len) {
             if (c == ';') {
                 state = mouse2a;
             } else {
-                goto flush_and_retry;
+                emitmouse(moves, &time, x, y);
+                state = new_move;
+                goto retry;
             }
             break;
 
@@ -205,12 +259,25 @@ int parsemoves(actlist* moves, const char* movestring, int len) {
 //    mouse2a -> new_move [label="UDLR", style=bold];
         case mouse2a:
             if (myisdigit(c)) {
-                digit2 = c - '0';
+                digit = c - '0';
                 state = mouse2b;
             } else if (isuppermove(c)) {
-                digit2 = 1;
-                dir2 = c;
-                state = flush;
+                digit = 1;
+                if ((dir == 'U' || dir == 'D') && (c == 'U' || c == 'D')) {
+                    state = error;
+                } else if ((dir == 'L' || dir == 'R') && (c == 'L' || c == 'R')) {
+                    state = error;
+                } else {
+                    dir = c;
+                    switch (dir) {
+                    case 'U': y = -digit; break;
+                    case 'D': y = +digit; break;
+                    case 'L': x = -digit; break;
+                    case 'R': x = +digit; break;
+                    }
+                    emitmouse(moves, &time, x, y);
+                    state = new_move;
+                }
             } else {
                 state = error;
             }
@@ -222,11 +289,6 @@ int parsemoves(actlist* moves, const char* movestring, int len) {
         if (state == error) {
             errmsg("error", "parse error at column %d", pos);
             break;
-        }
-
-        if (state == flush) {
-            /* TODO: append move to actlist */
-            state = new_move;
         }
 
         if (c == EOF) {
