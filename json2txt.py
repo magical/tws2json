@@ -139,7 +139,7 @@ def parsemoves(s):
                     flush_move()
                 else:
                     state = 'error'
-#
+
 #    movelower -> diagonallower [label="+"];
 #    movelower -> digit_or_move [label="1-9", style=dashed];
 #    movelower -> mouse [label="*", style=dashed];
@@ -255,8 +255,7 @@ def parsemoves(s):
                     flush_move()
                 else:
                     state = 'error'
-#
-#    // *L;2U
+
 #    mouse2a -> mouse2b [label="2-9"];
 #    mouse2a -> new_move [label="UDLR", style=bold];
         elif state == mouse2a:
