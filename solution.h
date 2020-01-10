@@ -26,18 +26,6 @@
 #define	SOUTH	4
 #define	EAST	8
 
-/* Translating directions to and from a two-bit representation. (Note
- * that NIL will map to the same value as NORTH.)
- */
-#define	diridx(dir)	((0x30210 >> ((dir) * 2)) & 3)
-#define	idxdir(idx)	(1 << ((idx) & 3))
-
-/* The frequency of the gameplay timer. Note that "seconds" refers to
- * seconds in the game, which are not necessarily the same length as
- * real-time seconds.
- */
-#define	TICKS_PER_SECOND	20
-
 /* The gameplay timer's value is forced to remain within 23 bits.
  * Thus, gameplay of a single level cannot exceed 4 days 20 hours 30
  * minutes and 30.4 seconds.
@@ -73,12 +61,6 @@ typedef	struct prng {
 /*
  * Definitions used in game play.
  */
-
-/* Turning macros.
- */
-#define	left(dir)	((((dir) << 1) | ((dir) >> 3)) & 15)
-#define	back(dir)	((((dir) << 2) | ((dir) >> 2)) & 15)
-#define	right(dir)	((((dir) << 3) | ((dir) >> 1)) & 15)
 
 /* A move is specified by its direction and when it takes place.
  */
