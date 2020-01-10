@@ -284,8 +284,32 @@ int parsemoves(actlist* moves, const char* movestring, int len) {
 			}
 			break;
 
+		//    mouse2b -> new_move [label="UDLR", style=bold];
+		case StateMouse2b:
+			if (isuppermove(c)) {
+				if ((dir == 'U' || dir == 'D') && (c == 'U' || c == 'D')) {
+					state = StateError;
+				} else if ((dir == 'L' || dir == 'R') && (c == 'L' || c == 'R')) {
+					state = StateError;
+				} else {
+					dir = c;
+					switch (dir) {
+					case 'U': y = -digit; break;
+					case 'D': y = +digit; break;
+					case 'L': x = -digit; break;
+					case 'R': x = +digit; break;
+					}
+					emitmouse(moves, &time, x, y);
+					state = StateInit;
+				}
+			} else {
+				state = StateError;
+			}
+			break;
+
 		default:
 			errmsg("internal error", "invalid state while parsing");
+			state = StateError;
 		}
 
 		if (state == StateError) {
