@@ -79,9 +79,9 @@ int parsemoves(actlist* moves, const char* movestring, int len) {
     for (pos = 0;;) {
         int c;
 
-        pos += 1;
         if (pos < len) {
             c = movestring[pos];
+            pos += 1;
         } else {
             c = EOF;
         }
@@ -287,7 +287,7 @@ int parsemoves(actlist* moves, const char* movestring, int len) {
         }
 
         if (state == StateError) {
-            errmsg("error", "parse error at column %d", pos);
+            errmsg("error", "parse error at column %d", pos+1);
             break;
         }
 
