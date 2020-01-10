@@ -463,7 +463,7 @@ int main(int argc, char *argv[])
 			fflush(stdout);
 		}
 		// write json level
-		if (game.solutionsize == 0) {
+		if (game.solutionsize == 6) {
 			//just the number and password
 			printf("  {\"class\":\"solution\",\n"
 			       "   \"number\":%u,\n"
