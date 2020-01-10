@@ -4,8 +4,14 @@ all: tws2json
 tws2json: tws2json.o solution.o fileio.o err.o bstrlib.o
 	$(CC) -O2 -fwhole-program -flto -o $@ $^
 
+json2tws: json2tws.o fileio.o err.o bstrlib.o json.o
+	$(CC) -O2 -fwhole-program -flto -o $@ $^ -lm
+
 %.o: %.c Makefile
 	$(CC) -O2 -flto -g -c -o $@ $< -Wall
+
+json.o: json.c json.h Makefile
+	$(CC) -O2 -flto -fno-strict-aliasing -g -c -o $@ $< -Wall
 
 # :read !gcc -MM *.c
 bstrlib.o: bstrlib.c bstrlib.h
