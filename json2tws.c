@@ -49,6 +49,7 @@ json_value* find_entry(json_value* v, const char* key) {
 			return v->u.object.values[i].value;
 		}
 	}
+	return NULL;
 }
 
 int doit(json_value *json) {
