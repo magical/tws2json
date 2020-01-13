@@ -25,9 +25,7 @@ typedef struct jsoncompressinfo {
     bstring	str;
 
     action	lastmove;
-
     int	lastmovedir;
-    int	lastmoveduration;
 
     int	rlemovedir;
     int	rlemoveduration;
@@ -134,9 +132,7 @@ int jsoncompress_init(jsoncompressinfo *self)
 	return -1;
     }
     self->lastmove.dir = NIL;
-
     self->lastmovedir = NIL;
-    self->lastmoveduration = 0; // 1 or 4.
 
     self->rlemovedir = NIL;
     self->rlemoveduration = 0;
@@ -169,7 +165,8 @@ int jsoncompress_flush(jsoncompressinfo *self)
     }
 
     if (self->lastmovedir != NIL) {
-	r = printdir(self, self->lastmovedir, self->lastmoveduration);
+	int lastmoveduration = 1; // XXX hmm
+	r = printdir(self, self->lastmovedir, lastmoveduration);
 	if (r < 0) {
 	    goto cleanup;
 	}
@@ -177,7 +174,6 @@ int jsoncompress_flush(jsoncompressinfo *self)
 
 cleanup:
     self->lastmovedir = NIL;
-    self->lastmoveduration = 0;
 
     if (r < 0) {
 	return r;
@@ -268,45 +264,48 @@ int jsoncompress_rle_flush(jsoncompressinfo *self)
 int jsoncompress_addmove(jsoncompressinfo *self, action move, int i)
 {
     int r;
-    long delta = 1;
+    long delta = 0;
 
     if (self == NULL) {
 	return -1;
     }
 
-    if (0 < i) {
+    if (i > 0) {
 	// the ticks between the previous move and the current move.
 	delta = move.when - self->lastmove.when;
     } else {
-	// XXX why does this have to be +1?
-	delta = move.when + 1;
-    }
-
-    if (delta <= 0) {
-	errmsg("error", "move %d: bad delta (%d)", i, delta);
-	return -1;
+	delta = move.when;
     }
 
     // Attempt to upconvert previous move
-    if (self->lastmovedir != NIL && self->lastmoveduration == 1 && 4 <= delta) {
-	self->lastmoveduration = 4;
-	delta -= 3;
+    int lastmoveduration = 0;
+    if (self->lastmovedir != NIL) {
+	if (delta >= 4) {
+	    lastmoveduration = 4;
+	    delta -= 4;
+	} else if (delta >= 1) {
+	    lastmoveduration = 1;
+	    delta -= 1;
+	} else {
+	    errmsg("error", "move %d: bad delta (%d)", i, delta);
+	    return -1;
+	}
     }
 
     // We are now finished monkeying with the previous move, so send it along.
-    r = jsoncompress_rle_add(self, self->lastmovedir, self->lastmoveduration);
+    r = jsoncompress_rle_add(self, self->lastmovedir, lastmoveduration);
     self->lastmovedir = NIL;
     if (r < 0) {
 	goto end;
     }
 
-    // If we have any delta time left, flush the previous move and write it out.
-    if (1 < delta) {
+    // If we have any delta time left, flush the move stream and write a wait.
+    if (delta > 0) {
 	r = jsoncompress_flush(self);
 	if (r < 0) {
 	    goto end;
 	}
-	r = printwait(self, delta - 1);
+	r = printwait(self, delta);
 	if (r < 0) {
 	    goto end;
 	}
@@ -315,7 +314,6 @@ int jsoncompress_addmove(jsoncompressinfo *self, action move, int i)
 end:
     self->lastmove = move;
     self->lastmovedir = move.dir;
-    self->lastmoveduration = 1;
 
     if (r < 0) {
 	return r;
