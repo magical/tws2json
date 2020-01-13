@@ -61,4 +61,7 @@ Several files have been borrowed from [Tile World][], copyright Brian Raiter, wh
 
 [bstrlib][] was written by Paul Hsieh, and is licensed under the GPL.
 
+[json-parser][] was written by James McLaughlin, and is licensed under a BSD license.
+
 [bstrlib]: http://bstring.sourceforge.net/
+[json-parser]: https://github.com/udp/json-parser
