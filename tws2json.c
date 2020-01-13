@@ -277,6 +277,9 @@ int jsoncompress_addmove(jsoncompressinfo *self, action move, int i)
     if (0 < i) {
 	// the ticks between the previous move and the current move.
 	delta = move.when - self->lastmove.when;
+    } else {
+	// XXX why does this have to be +1?
+	delta = move.when + 1;
     }
 
     if (delta <= 0) {
