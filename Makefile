@@ -4,7 +4,7 @@ all: tws2json
 tws2json: tws2json.o solution.o fileio.o err.o bstrlib.o
 	$(CC) -O2 -fwhole-program -flto -o $@ $^
 
-json2tws: json2tws.o fileio.o err.o bstrlib.o json.o
+json2tws: json2tws.o fileio.o err.o bstrlib.o json.o parse.o solution.o
 	$(CC) -O2 -fwhole-program -flto -o $@ $^ -lm
 
 %.o: %.c Makefile

@@ -10,6 +10,7 @@
 #include <stdio.h>
 
 #include "bstrlib.h"
+#include "json.h"
 
 #include "solution.h"
 #include "fileio.h"
@@ -17,7 +18,8 @@
 
 #include "version.h"
 
-#include "json.h"
+// parse.c
+int parsemoves(actlist* moves, const char* movestring, int len);
 
 size_t read_callback(void *buf, size_t elsize, size_t nelem, void *fp) {
 	return fread(buf, elsize, nelem, fp);
@@ -69,13 +71,25 @@ int doit(json_value *json) {
 		errmsg("error", "no solutions");
 	}
 
+	actlist act = {};
 	for (long i = 0; i < solutions->u.array.length; i++) {
 		json_value* sol = solutions->u.array.values[i];
 		json_value* moves = find_entry(sol, "moves");
 		if (moves && moves->type == json_string) {
 			printf("%s\n", moves->u.string.ptr);
+			parsemoves(&act, moves->u.string.ptr, moves->u.string.length);
+			for (int j = 0; j < act.count; j++) {
+				if (act.list[j].dir >= 16) {
+					int x = (act.list[j].dir - 16) % 19 - 9;
+					int y = (act.list[j].dir - 16) / 19 - 9;
+					printf("%8d mouse %d %d\n", act.list[j].when, x, y);
+				} else {
+					printf("%8d %d\n", act.list[j].when, act.list[j].dir);
+				}
+			}
 		}
 	}
+	destroymovelist(&act);
 
 	return 0;
 }
