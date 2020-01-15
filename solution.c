@@ -278,9 +278,10 @@ int expandsolution(solutioninfo *solution, gamesetup const *game)
     solution->flags = game->solutiondata[6];
     solution->rndslidedir = indextodir(game->solutiondata[7] & 7);
     solution->stepping = (game->solutiondata[7] >> 3) & 7;
-    solution->rndseed = game->solutiondata[8] | (game->solutiondata[9] << 8)
-					      | (game->solutiondata[10] << 16)
-					      | (game->solutiondata[11] << 24);
+    solution->rndseed = (unsigned long)game->solutiondata[8]
+		      | ((unsigned long)game->solutiondata[9] << 8)
+		      | ((unsigned long)game->solutiondata[10] << 16)
+		      | ((unsigned long)game->solutiondata[11] << 24);
 
     initmovelist(&solution->moves);
     act.when = -1;
