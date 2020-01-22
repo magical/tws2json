@@ -1,5 +1,5 @@
 
-all: tws2json
+all: tws2json json2tws
 
 tws2json: tws2json.o solution.o fileio.o err.o bstrlib.o
 	$(CC) -O2 -fwhole-program -flto -o $@ $^
