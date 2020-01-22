@@ -35,7 +35,7 @@
    "password":"TQKB",
    "rndslidedir":1,
    "stepping":0,
-   "rndseed":18446744071562067968,
+   "rndseed":2147483648,
    "moves":"L2D,2D,l,d"},
   {"class":"solution",
    "number":6,
