@@ -307,6 +307,10 @@ int parsemoves(actlist* moves, const char* movestring, int len) {
 			}
 			break;
 
+		case StateError:
+			// handled below...
+			break;
+
 		default:
 			errmsg("internal error", "invalid state while parsing");
 			state = StateError;

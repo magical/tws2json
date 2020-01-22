@@ -8,7 +8,7 @@ json2tws: json2tws.o fileio.o err.o bstrlib.o json.o parse.o solution.o
 	$(CC) -O2 -fwhole-program -flto -o $@ $^ -lm
 
 %.o: %.c Makefile
-	$(CC) -O2 -flto -g -c -o $@ $< -Wall
+	$(CC) -O2 -flto -g -c -o $@ $< -Wall -Wswitch-enum
 
 json.o: json.c json.h Makefile
 	$(CC) -O2 -flto -fno-strict-aliasing -g -c -o $@ $< -Wall
