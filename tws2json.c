@@ -288,7 +288,8 @@ int jsoncompress_addmove(jsoncompressinfo *self, action move, int i)
 	    delta -= 1;
 	} else {
 	    errmsg("error", "move %d: bad delta (%d)", i, delta);
-	    return -1;
+	    r = -1;
+	    goto end;
 	}
     }
 
@@ -342,8 +343,12 @@ int jsoncompress_finish(jsoncompressinfo *self, unsigned long solutiontime)
 	return r;
     }
 
+    if (self->lastmove.when > solutiontime) {
+	warn("invalid time %d is less than last move time of %d", solutiontime, self->lastmove.when);
+    }
+    // solution time should be equal to the .when of the last move (or wait)
     if (self->lastmove.when < solutiontime) {
-	r = printwait(self, solutiontime - self->lastmove.when - 1);
+	r = printwait(self, solutiontime - self->lastmove.when);
 	if (r < 0) {
 	    return r;
 	}
