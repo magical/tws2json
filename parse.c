@@ -65,7 +65,7 @@ void emitmouse(actlist* moves, long* time, int x, int y) {
 	*time += 1;
 }
 
-int parsemoves(actlist* moves, const char* movestring, int len) {
+int parsemoves(actlist* moves, long* totaltime, const char* movestring, int len) {
 	enum parser_state state = StateInit;
 	long time = 0;
 	int count;
@@ -326,5 +326,6 @@ int parsemoves(actlist* moves, const char* movestring, int len) {
 		}
 	}
 
+	*totaltime = time - 1;
 	return 0;
 }

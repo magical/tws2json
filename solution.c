@@ -232,22 +232,19 @@ int readsolutionheader(fileinfo *file, int *ruleset, int *flags,
 
 /* Write the header bytes to the given solution file.
  */
-/*
-static int writesolutionheader(fileinfo *file, int ruleset, int flags,
+int writesolutionheader(fileinfo *file, int ruleset, int currentlevel,
 			       int extrasize, unsigned char const *extra)
 {
     return filewriteint32(file, CSSIG, NULL)
 	&& filewriteint8(file, ruleset, NULL)
-	&& filewriteint16(file, flags, NULL)
+	&& filewriteint16(file, currentlevel, NULL)
 	&& filewriteint8(file, extrasize, NULL)
 	&& filewrite(file, extra, extrasize, NULL);
 }
-*/
 
 /* Write the name of the level set to the given solution file.
  */
-/*
-static int writesolutionsetname(fileinfo *file, char const *setname)
+int writesolutionsetname(fileinfo *file, char const *setname)
 {
     char	zeroes[16] = "";
     int		n;
@@ -257,7 +254,6 @@ static int writesolutionsetname(fileinfo *file, char const *setname)
 	&& filewrite(file, zeroes, 16, NULL)
 	&& filewrite(file, setname, n, NULL);
 }
-*/
 
 /*
  * Solution translation.
@@ -520,8 +516,7 @@ int readsolution(fileinfo *file, gamesetup *game)
 /* Write the data of one complete solution from the appropriate fields
  * of game to the given file.
  */
-/*
-static int writesolution(fileinfo *file, gamesetup const *game)
+int writesolution(fileinfo *file, gamesetup const *game)
 {
     if (game->solutionsize) {
 	if (!filewriteint32(file, game->solutionsize, "write error")
@@ -536,7 +531,7 @@ static int writesolution(fileinfo *file, gamesetup const *game)
     }
 
     return TRUE;
-}*/
+}
 
 /* Free all memory allocated for storing a solution.
  */

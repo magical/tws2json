@@ -147,6 +147,15 @@ extern int readsolutionheader(fileinfo *file, int *ruleset, int *flags,
  */
 extern int readsolution(fileinfo *file, gamesetup* game);
 
+/* Write the header bytes to the given solution file.
+ */
+extern int writesolutionheader(fileinfo *file, int ruleset, int currentlevel,
+			       int extrasize, unsigned char const *extra);
+
+/* Write the name of the level set to the given solution file.
+ */
+extern int writesolutionsetname(fileinfo *file, char const *setname);
+
 /* Free all memory allocated for storing a solution.
  */
 extern void clearsolution(gamesetup *game);
@@ -162,5 +171,10 @@ extern int expandsolution(solutioninfo *solution, gamesetup const *game);
  * occurs. (It is not an error to compress the null solution.)
  */
 extern int contractsolution(solutioninfo const *solution, gamesetup *game);
+
+/* Write the data of one complete solution from the appropriate fields
+ * of game to the given file.
+ */
+extern int writesolution(fileinfo *file, gamesetup const *game);
 
 #endif
