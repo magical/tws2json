@@ -318,7 +318,7 @@ int parsemoves(actlist* moves, long* totaltime, const char* movestring, int len)
 
 		if (state == StateError) {
 			errmsg("error", "parse error at column %d", pos+1);
-			break;
+			return 1;
 		}
 
 		if (c == EOF) {
